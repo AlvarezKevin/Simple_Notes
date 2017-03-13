@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Note Taking</string>
+    <string name="action_settings">Settings</string>
+    <string name="add_note">Add Note</string>
+    <string name="title_activity_new_note">NewNoteActivity</string>
+    <string name="new_note_activity">New Note</string>
+    <string name="enter_note_text_hint">Enter note...</string>
+    <string name="action_color">Color</string>
+    <string name="menu_yellow">Yellow</string>
+    <string name="error_saving_note">Error saving note into database</string>
+    <string name="note_saved">Note Saved.</string>
+    <string name="action_save">Save</string>
+    <string name="failed_save_no_title">Could not save, no title</string>
+    <string name="enter_title">Enter Title...</string>
+    <string name="delete_all">Delete all notes</string>
+    <string name="edit_note">Edit note</string>
+    <string name="delete">Delete</string>
+    <string name="unable_to_delete">Unable to delete note</string>
+    <string name="note_deleted">Note Deleted</string>
+
+</resources>
