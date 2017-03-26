@@ -7,10 +7,20 @@
     tools:context="me.alvarezkevin.notetaking.fragments.MainActivityFragment"
     tools:showIn="@layout/activity_main">
 
+    <TextView
+        android:id="@+id/textview_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:fontFamily="sans-serif-condensed"
+        android:gravity="center"
+        android:text="@string/no_notes"
+        android:textSize="36sp" />
+
     <ListView
+        android:id="@+id/notes_list_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/notes_list_view">
+        android:layout_height="match_parent">
 
     </ListView>
 
