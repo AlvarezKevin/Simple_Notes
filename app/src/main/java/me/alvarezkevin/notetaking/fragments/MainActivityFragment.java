@@ -33,7 +33,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     private static final String LOG_TAG = MainActivityFragment.class.getSimpleName();
     private static final int NOTE_LOADER = 0;
-
     private NoteCursorAdapter mNoteAdapter;
 
     public MainActivityFragment() {
@@ -55,7 +54,9 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
         ListView listView = (ListView) view.findViewById(R.id.notes_list_view);
         listView.setAdapter(mNoteAdapter);
+        listView.setEmptyView(view.findViewById(R.id.textview_empty));
 
+        //Creates uri with note id and passes it to intent once clicked
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -67,6 +68,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
         });
 
+        //Init loaders when view is created
         getLoaderManager().initLoader(NOTE_LOADER, null, this);
 
         return view;
@@ -94,6 +96,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     }
 
     private void deleteAll() {
+        //Creates a AlertDialog with delete and cancel button
+        //Deletes whole list if delete is clicked, else it cancels
         final AlertDialog.Builder deleteAllDialog = new AlertDialog.Builder(getActivity());
         deleteAllDialog.setTitle("Delete All");
         deleteAllDialog.setMessage("Are you sure you want to delete all?");
@@ -113,6 +117,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         deleteAllDialog.show();
     }
 
+    //Creates cursorloader and gets data from content provider and swaps cursor on adapter if any change detected
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] projection = {

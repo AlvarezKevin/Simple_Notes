@@ -14,7 +14,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -58,15 +57,18 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_edit_note, container, false);
 
+        //Sets different views
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.content_edit_note);
         mNoteNameEditText = (EditText) view.findViewById(R.id.note_name_edit_text);
         mNoteEditText = (EditText) view.findViewById(R.id.note_edit_text);
 
+        //Gets data from intent and looks for content uri
         mNoteUri = getActivity().getIntent().getData();
         if (mNoteUri == null) {
             getActivity().setTitle(getString(R.string.add_note));
             mNoteColor = 0;
         } else {
+            //If content provider found it will change the label to Edit Note and initialize loader
             getActivity().setTitle(getString(R.string.edit_note));
             getLoaderManager().initLoader(1, null, this);
         }
@@ -74,6 +76,8 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
         return view;
     }
 
+    //Detects  if there was a change
+    //Used for checking if save is needed when presses back
     private View.OnTouchListener mTouchListeneer = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -86,6 +90,7 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         getActivity().getMenuInflater().inflate(R.menu.menu_edit_note, menu);
 
+        //Creates spinner on menu item
         MenuItem item = menu.findItem(R.id.spinner_color);
         mColorSpinner = (Spinner) MenuItemCompat.getActionView(item);
 
@@ -94,6 +99,7 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
 
         mColorSpinner.setAdapter(colorSpinnerAdapter);
 
+        //If in add note mode it will remove the delete option
         if (mNoteUri == null) {
             MenuItem deleteItem = menu.findItem(R.id.action_delete);
             deleteItem.setVisible(false);
@@ -102,72 +108,70 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_save) {
-            saveNote();
-            getActivity().finish();
-            return true;
-        }
-        if (id == R.id.spinner_color) {
-            mColorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    String color = (String) parent.getItemAtPosition(position);
-                    if (!TextUtils.isEmpty(color)) {
-                        if (color.equals("White")) {
-                            mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_WHITE;
-                        } else if (color.equals("Yellow")) {
-                            mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_YELLOW;
-                        } else if (color.equals("Blue")) {
-                            mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_BLUE;
-                        } else if (color.equals("Red")) {
-                            mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_RED;
+        switch (id) {
+            case R.id.action_save:
+                saveNote();
+                getActivity().finish();
+                return true;
+            case R.id.spinner_color:
+                //Sets mNoteColor based on spinner selection
+                mColorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        String color = (String) parent.getItemAtPosition(position);
+                        if (!TextUtils.isEmpty(color)) {
+                            if (color.equals("White")) {
+                                mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_WHITE;
+                            } else if (color.equals("Yellow")) {
+                                mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_YELLOW;
+                            } else if (color.equals("Blue")) {
+                                mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_BLUE;
+                            } else if (color.equals("Red")) {
+                                mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_RED;
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                    mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_WHITE;
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        //Default Value
+                        mNoteColor = NoteContract.NoteEntry.NOTE_COLOR_WHITE;
+                    }
+                });
+                return true;
+            case android.R.id.home:
+                if (mNoteChange) {
+                    saveNote();
                 }
-            });
-            return true;
-        }
-        if (id == android.R.id.home) {
-            if(mNoteChange) {
-                saveNote();
-            }
-            NavUtils.navigateUpFromSameTask(getActivity());
-            return true;
-        }
-        if(id == R.id.action_delete) {
-            showDeleteBox();
-            return true;
+                NavUtils.navigateUpFromSameTask(getActivity());
+                return true;
+            case R.id.action_delete:
+                showDeleteBox();
+                return true;
         }
         return super.onOptionsItemSelected(item);
+
     }
 
 
     //Function used to insert or save note into database
     private void saveNote() {
-        //mNoteNameEditText = (EditText) getActivity().findViewById(R.id.note_name_edit_text);
+        //Get text from EditText
         String noteName = mNoteNameEditText.getText().toString().trim();
-        Log.v(LOG_TAG, "NOTE NAME: " + noteName);
-
-        // mNoteEditText = (EditText) getActivity().findViewById(R.id.note_edit_text);
         String noteText = mNoteEditText.getText().toString().trim();
-        Log.v(LOG_TAG, "NOTE: " + noteText);
 
         int color = mNoteColor;
-
+        //Make sure it contains a title
         if (noteName.length() < 1) {
             Toast.makeText(getActivity(), R.string.failed_save_no_title, Toast.LENGTH_SHORT).show();
             return;
         }
-
+        //Creates content values and puts in title and text previously captured.
         ContentValues noteValues = new ContentValues();
         noteValues.put(NoteContract.NoteEntry.COLUMN_NOTE_NAME, noteName);
         noteValues.put(NoteContract.NoteEntry.COLUMN_NOTE_TEXT, noteText);
@@ -176,11 +180,14 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
         Uri uri = null;
         int rowsUpdated = 0;
         if (mNoteUri == null) {
+            //Will insert if in add mode and get new uri
             uri = getActivity().getContentResolver().insert(NoteContract.NoteEntry.CONTENT_URI, noteValues);
         } else {
+            //Will update if in edit mode and set the amount of rows updated
             rowsUpdated = getActivity().getContentResolver().update(mNoteUri, noteValues, null, null);
         }
 
+        //Checks if the insert or update were successful
         if (uri == null && rowsUpdated == 0) {
             Toast.makeText(getActivity(), getString(R.string.error_saving_note), Toast.LENGTH_SHORT).show();
         } else {
@@ -188,6 +195,7 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
         }
     }
 
+    //Creates AlertDialog to make sure user wants to delete note
     private void showDeleteBox() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -212,11 +220,13 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     private void deleteNote() {
-        if(mNoteUri != null) {
-            int rowsDeleted = getActivity().getContentResolver().delete(mNoteUri,null,null);
+        if (mNoteUri != null) {
+            //Using the notes uri it will delete it from the database
+            int rowsDeleted = getActivity().getContentResolver().delete(mNoteUri, null, null);
+            //Checks to make sure it was able to delete successfully
             if (rowsDeleted != 0) {
-                Toast.makeText(getActivity(), R.string.note_deleted,Toast.LENGTH_SHORT).show();
-            }else {
+                Toast.makeText(getActivity(), R.string.note_deleted, Toast.LENGTH_SHORT).show();
+            } else {
                 Toast.makeText(getActivity(), R.string.unable_to_delete, Toast.LENGTH_SHORT).show();
             }
         }
@@ -228,6 +238,7 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
      */
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        //Gets data from database into cursor loader
         String[] projection = {
                 NoteContract.NoteEntry._ID,
                 NoteContract.NoteEntry.COLUMN_NOTE_NAME,
@@ -240,6 +251,7 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data.moveToFirst()) {
+            //Gets data from cursor loader and sets it into EditText
             String name = data.getString(data.getColumnIndexOrThrow(NoteContract.NoteEntry.COLUMN_NOTE_NAME));
             String text = data.getString(data.getColumnIndexOrThrow(NoteContract.NoteEntry.COLUMN_NOTE_TEXT));
             int color = data.getInt(data.getColumnIndexOrThrow(NoteContract.NoteEntry.COLUMN_NOTE_COLOR));
@@ -247,7 +259,7 @@ public class EditNoteFragment extends Fragment implements LoaderManager.LoaderCa
             mNoteNameEditText.setText(name);
             mNoteEditText.setText(text);
 
-
+            //Sets layout colors based on notes saved color.
             switch (color) {
                 case NoteContract.NoteEntry.NOTE_COLOR_YELLOW:
                     mNoteNameEditText.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorYellow));

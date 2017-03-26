@@ -17,5 +17,6 @@
     <string name="delete">Delete</string>
     <string name="unable_to_delete">Unable to delete note</string>
     <string name="note_deleted">Note Deleted</string>
+    <string name="no_notes">No notes to see here :(</string>
 
 </resources>
